@@ -1,0 +1,773 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Claude Skill Builder</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 680 680'%3E%3Crect width='680' height='680' rx='160' fill='%230d0d18'/%3E%3Ccircle cx='340' cy='340' r='260' fill='none' stroke='%236c63ff' stroke-width='2' opacity='0.2'/%3E%3Ccircle cx='340' cy='340' r='210' fill='none' stroke='%236c63ff' stroke-width='3' opacity='0.35'/%3E%3Ccircle cx='340' cy='80' r='5' fill='%236c63ff' opacity='0.5'/%3E%3Ccircle cx='340' cy='600' r='5' fill='%236c63ff' opacity='0.5'/%3E%3Ccircle cx='80' cy='340' r='5' fill='%236c63ff' opacity='0.5'/%3E%3Ccircle cx='600' cy='340' r='5' fill='%236c63ff' opacity='0.5'/%3E%3Cpath d='M160,200 L260,200 L260,230' fill='none' stroke='%236c63ff' stroke-width='2' opacity='0.5' stroke-linecap='round'/%3E%3Cpath d='M520,200 L420,200 L420,230' fill='none' stroke='%2300d4aa' stroke-width='2' opacity='0.7' stroke-linecap='round'/%3E%3Cpath d='M160,480 L260,480 L260,450' fill='none' stroke='%23ff6b9d' stroke-width='2' opacity='0.6' stroke-linecap='round'/%3E%3Cpath d='M520,480 L420,480 L420,450' fill='none' stroke='%236c63ff' stroke-width='2' opacity='0.5' stroke-linecap='round'/%3E%3Cpath d='M375,130 L292,348 L358,348 L305,550 L452,302 L375,302 L422,130 Z' fill='%236c63ff'/%3E%3Cpath d='M375,155 L320,318 L370,318 L335,480 L420,318 L367,318 L400,155 Z' fill='%23a09bff' opacity='0.6'/%3E%3Ccircle cx='398' cy='130' r='8' fill='%23a09bff'/%3E%3Ccircle cx='305' cy='550' r='8' fill='%2300d4aa'/%3E%3Ccircle cx='305' cy='550' r='4' fill='%23ffffff' opacity='0.8'/%3E%3Ccircle cx='398' cy='130' r='4' fill='%23ffffff' opacity='0.8'/%3E%3C/svg%3E">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0a0f;
+    --surface: #12121a;
+    --surface2: #1a1a26;
+    --border: #2a2a3e;
+    --accent: #6c63ff;
+    --accent2: #ff6b9d;
+    --accent3: #00d4aa;
+    --text: #e8e8f0;
+    --text-muted: #6b6b8a;
+    --text-dim: #3a3a5c;
+    --glow: rgba(108,99,255,0.15);
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'DM Mono', monospace;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* Fondo animado */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background:
+      radial-gradient(ellipse 60% 50% at 20% 10%, rgba(108,99,255,0.08) 0%, transparent 60%),
+      radial-gradient(ellipse 40% 40% at 80% 80%, rgba(0,212,170,0.06) 0%, transparent 60%),
+      radial-gradient(ellipse 30% 30% at 60% 30%, rgba(255,107,157,0.05) 0%, transparent 50%);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .container {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 40px 24px 80px;
+    position: relative;
+    z-index: 1;
+  }
+
+  /* Header */
+  header {
+    text-align: center;
+    margin-bottom: 48px;
+    animation: fadeDown 0.6s ease both;
+  }
+
+  .badge {
+    display: inline-block;
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--accent);
+    border: 1px solid rgba(108,99,255,0.3);
+    padding: 5px 14px;
+    border-radius: 20px;
+    margin-bottom: 20px;
+    background: rgba(108,99,255,0.06);
+  }
+
+  h1 {
+    font-family: 'Syne', sans-serif;
+    font-size: clamp(32px, 5vw, 52px);
+    font-weight: 800;
+    line-height: 1.1;
+    letter-spacing: -1px;
+    margin-bottom: 12px;
+  }
+
+  h1 span {
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .subtitle {
+    color: var(--text-muted);
+    font-size: 14px;
+    max-width: 480px;
+    margin: 0 auto;
+    line-height: 1.7;
+  }
+
+  /* Grid principal */
+  .builder-grid {
+    display: grid;
+    gap: 16px;
+    animation: fadeUp 0.7s ease 0.2s both;
+  }
+
+  /* Sección de bloque */
+  .block {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    overflow: hidden;
+    transition: border-color 0.3s, box-shadow 0.3s;
+  }
+
+  .block:focus-within {
+    border-color: rgba(108,99,255,0.5);
+    box-shadow: 0 0 0 3px var(--glow);
+  }
+
+  .block-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 14px 18px;
+    border-bottom: 1px solid var(--border);
+    background: var(--surface2);
+  }
+
+  .block-icon {
+    width: 28px;
+    height: 28px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    flex-shrink: 0;
+  }
+
+  .block-title {
+    font-family: 'Syne', sans-serif;
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+  }
+
+  .block-tag {
+    margin-left: auto;
+    font-size: 10px;
+    color: var(--text-muted);
+    font-family: 'DM Mono', monospace;
+    background: var(--bg);
+    padding: 3px 8px;
+    border-radius: 6px;
+    border: 1px solid var(--border);
+  }
+
+  textarea, input[type="text"] {
+    width: 100%;
+    background: transparent;
+    border: none;
+    outline: none;
+    color: var(--text);
+    font-family: 'DM Mono', monospace;
+    font-size: 13px;
+    line-height: 1.75;
+    padding: 16px 18px;
+    resize: none;
+    min-height: 90px;
+  }
+
+  textarea::placeholder, input[type="text"]::placeholder {
+    color: var(--text-dim);
+  }
+
+  input[type="text"] {
+    min-height: auto;
+    padding: 14px 18px;
+  }
+
+  /* Colores de ícono por sección */
+  .ctx .block-icon { background: rgba(108,99,255,0.15); color: var(--accent); }
+  .dat .block-icon { background: rgba(0,212,170,0.12); color: var(--accent3); }
+  .ins .block-icon { background: rgba(255,107,157,0.12); color: var(--accent2); }
+  .crit .block-icon { background: rgba(255,200,80,0.12); color: #ffc850; }
+  .ex .block-icon { background: rgba(130,180,255,0.12); color: #82b4ff; }
+  .fmt .block-icon { background: rgba(180,130,255,0.12); color: #b482ff; }
+
+  /* Toggle activo */
+  .block-toggle {
+    background: none;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    color: var(--text-muted);
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    padding: 4px 10px;
+    cursor: pointer;
+    transition: all 0.2s;
+    margin-left: 6px;
+  }
+
+  .block-toggle:hover { border-color: var(--accent); color: var(--accent); }
+  .block-toggle.active { background: rgba(108,99,255,0.15); border-color: var(--accent); color: var(--accent); }
+
+  /* Área de preview / resultado */
+  .preview-section {
+    margin-top: 24px;
+    animation: fadeUp 0.7s ease 0.4s both;
+  }
+
+  .preview-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 12px;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+
+  .preview-label {
+    font-family: 'Syne', sans-serif;
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: var(--text-muted);
+  }
+
+  .preview-actions {
+    display: flex;
+    gap: 8px;
+  }
+
+  .btn {
+    font-family: 'Syne', sans-serif;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    padding: 9px 18px;
+    border-radius: 10px;
+    border: none;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    text-transform: uppercase;
+  }
+
+  .btn-primary {
+    background: linear-gradient(135deg, var(--accent), #8b83ff);
+    color: white;
+    box-shadow: 0 4px 16px rgba(108,99,255,0.3);
+  }
+
+  .btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(108,99,255,0.4);
+  }
+
+  .btn-secondary {
+    background: var(--surface2);
+    color: var(--text);
+    border: 1px solid var(--border);
+  }
+
+  .btn-secondary:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+
+  .btn-copy {
+    background: var(--surface2);
+    color: var(--accent3);
+    border: 1px solid rgba(0,212,170,0.3);
+  }
+
+  .btn-copy:hover {
+    background: rgba(0,212,170,0.1);
+    box-shadow: 0 4px 12px rgba(0,212,170,0.15);
+  }
+
+  .btn-copy.copied {
+    background: rgba(0,212,170,0.15);
+    color: var(--accent3);
+  }
+
+  /* Output box */
+  .output-box {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    overflow: hidden;
+    position: relative;
+  }
+
+  .output-topbar {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 18px;
+    background: var(--surface2);
+    border-bottom: 1px solid var(--border);
+  }
+
+  .dot { width: 10px; height: 10px; border-radius: 50%; }
+  .dot-r { background: #ff5f57; }
+  .dot-y { background: #febc2e; }
+  .dot-g { background: #28c840; }
+
+  .output-filename {
+    font-size: 11px;
+    color: var(--text-muted);
+    margin-left: 6px;
+  }
+
+  #output-text {
+    padding: 20px 18px;
+    font-size: 12.5px;
+    line-height: 1.8;
+    color: var(--text);
+    white-space: pre-wrap;
+    word-break: break-word;
+    min-height: 160px;
+    max-height: 420px;
+    overflow-y: auto;
+  }
+
+  #output-text::-webkit-scrollbar { width: 6px; }
+  #output-text::-webkit-scrollbar-track { background: transparent; }
+  #output-text::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+
+  /* Coloreado sintaxis en output */
+  .tag-open { color: var(--accent); }
+  .tag-close { color: var(--accent); opacity: 0.6; }
+  .tag-content { color: var(--text); }
+
+  /* Placeholder del output */
+  .output-placeholder {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    padding: 40px 20px;
+    color: var(--text-dim);
+    text-align: center;
+    min-height: 160px;
+  }
+
+  .output-placeholder svg { opacity: 0.4; }
+  .output-placeholder p { font-size: 13px; line-height: 1.6; }
+
+  /* Copy feedback toast */
+  .toast {
+    position: fixed;
+    bottom: 32px;
+    left: 50%;
+    transform: translateX(-50%) translateY(80px);
+    background: var(--accent3);
+    color: #0a0a0f;
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    font-size: 13px;
+    padding: 12px 24px;
+    border-radius: 12px;
+    box-shadow: 0 8px 32px rgba(0,212,170,0.4);
+    transition: transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+    z-index: 1000;
+    white-space: nowrap;
+  }
+
+  .toast.show { transform: translateX(-50%) translateY(0); }
+
+  /* Stats line */
+  .stats-line {
+    display: flex;
+    gap: 20px;
+    padding: 12px 18px;
+    border-top: 1px solid var(--border);
+    background: var(--surface2);
+  }
+
+  .stat-item {
+    font-size: 11px;
+    color: var(--text-muted);
+    display: flex;
+    align-items: center;
+    gap: 5px;
+  }
+
+  .stat-value { color: var(--text); font-weight: 500; }
+
+  /* Instrucciones helper row */
+  .ins-helper {
+    display: flex;
+    gap: 8px;
+    padding: 0 18px 14px;
+    flex-wrap: wrap;
+  }
+
+  .ins-tag-btn {
+    font-size: 11px;
+    color: var(--accent2);
+    border: 1px solid rgba(255,107,157,0.25);
+    background: rgba(255,107,157,0.06);
+    padding: 4px 10px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-family: 'DM Mono', monospace;
+    transition: all 0.15s;
+  }
+
+  .ins-tag-btn:hover {
+    background: rgba(255,107,157,0.15);
+    border-color: rgba(255,107,157,0.5);
+  }
+
+  /* Divider */
+  .section-divider {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin: 8px 0;
+    color: var(--text-dim);
+    font-size: 11px;
+  }
+
+  .section-divider::before,
+  .section-divider::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+  }
+
+  /* Animaciones */
+  @keyframes fadeDown {
+    from { opacity: 0; transform: translateY(-20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
+  }
+
+  /* Responsive */
+  @media (max-width: 600px) {
+    .preview-header { flex-direction: column; align-items: flex-start; }
+    .preview-actions { width: 100%; }
+    .btn { flex: 1; justify-content: center; }
+  }
+</style>
+</head>
+<body>
+
+<div class="container">
+
+  <!-- Header -->
+  <header>
+    <div class="badge">⚡ Prompt Engineer</div>
+    <h1>Claude <span>Skill Builder</span></h1>
+    <p class="subtitle">Construye prompts estructurados para Claude siguiendo la metodología de Anthropic. Rellena los bloques y genera tu skill lista para copiar.</p>
+  </header>
+
+  <!-- Builder -->
+  <div class="builder-grid">
+
+    <!-- CONTEXTO -->
+    <div class="block ctx">
+      <div class="block-header">
+        <div class="block-icon">🎯</div>
+        <span class="block-title">Contexto</span>
+        <span class="block-tag">&lt;contexto&gt;</span>
+      </div>
+      <textarea id="field-contexto" placeholder="Define el rol de Claude y el objetivo de la tarea.&#10;&#10;Ej: Eres un asistente especializado en analizar documentos operativos. Ayudas a un equipo a entender qué ocurrió, qué evidencia existe y qué decisión se puede tomar..." rows="4"></textarea>
+    </div>
+
+    <!-- DATOS -->
+    <div class="block dat">
+      <div class="block-header">
+        <div class="block-icon">📦</div>
+        <span class="block-title">Datos</span>
+        <span class="block-tag">&lt;datos&gt;</span>
+      </div>
+      <textarea id="field-datos" placeholder="Incluye aquí la información, documentos o variables que Claude debe analizar.&#10;&#10;Ej: {{documento_del_usuario}}, {{transcripcion}}, {{ticket}}..." rows="3"></textarea>
+    </div>
+
+    <!-- INSTRUCCIONES (campo especial) -->
+    <div class="block ins">
+      <div class="block-header">
+        <div class="block-icon">📋</div>
+        <span class="block-title">Instrucciones</span>
+        <span class="block-tag">&lt;instrucciones&gt;</span>
+      </div>
+      <textarea id="field-instrucciones" placeholder="Describe los pasos que debe seguir Claude. Usa numeración para orden claro.&#10;&#10;1. Lee primero el documento principal.&#10;2. Identifica los datos verificables.&#10;3. ..." rows="5"></textarea>
+      <div class="ins-helper">
+        <button class="ins-tag-btn" onclick="addStep()">+ Agregar paso</button>
+        <button class="ins-tag-btn" onclick="addVerify()">+ Verificación final</button>
+        <button class="ins-tag-btn" onclick="addCondition()">+ Si falta info...</button>
+      </div>
+    </div>
+
+    <div class="section-divider">campos opcionales</div>
+
+    <!-- CRITERIOS -->
+    <div class="block crit">
+      <div class="block-header">
+        <div class="block-icon">✅</div>
+        <span class="block-title">Criterios de calidad</span>
+        <span class="block-tag">&lt;criterios&gt;</span>
+        <button class="block-toggle" id="toggle-criterios" onclick="toggleBlock('criterios')">incluir</button>
+      </div>
+      <div id="body-criterios">
+        <textarea id="field-criterios" placeholder="Define qué hace que una respuesta sea correcta o útil.&#10;&#10;Ej: Sé factual y cuidadoso. No inventes detalles. Si los datos no permiten llegar a una conclusión confiable, dilo explícitamente." rows="3"></textarea>
+      </div>
+    </div>
+
+    <!-- EJEMPLOS -->
+    <div class="block ex">
+      <div class="block-header">
+        <div class="block-icon">💡</div>
+        <span class="block-title">Ejemplos</span>
+        <span class="block-tag">&lt;examples&gt;</span>
+        <button class="block-toggle" id="toggle-ejemplos" onclick="toggleBlock('ejemplos')">incluir</button>
+      </div>
+      <div id="body-ejemplos">
+        <textarea id="field-ejemplos" placeholder='Muestra casos similares y sus respuestas esperadas.&#10;&#10;Input: "El usuario dice: No encuentro dónde descargar mi certificado."&#10;Output: Categoría: duda de uso / Prioridad: media' rows="4"></textarea>
+      </div>
+    </div>
+
+    <!-- FORMATO DE SALIDA -->
+    <div class="block fmt">
+      <div class="block-header">
+        <div class="block-icon">📤</div>
+        <span class="block-title">Formato de salida</span>
+        <span class="block-tag">&lt;formato_salida&gt;</span>
+        <button class="block-toggle" id="toggle-formato" onclick="toggleBlock('formato')">incluir</button>
+      </div>
+      <div id="body-formato">
+        <textarea id="field-formato" placeholder="Define cómo debe entregar la respuesta Claude.&#10;&#10;Ej: Devuelve la respuesta con esta estructura:&#10;&lt;resumen&gt; breve explicación &lt;/resumen&gt;&#10;&lt;conclusion&gt; respuesta final &lt;/conclusion&gt;" rows="4"></textarea>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Preview / Output -->
+  <div class="preview-section">
+    <div class="preview-header">
+      <span class="preview-label">🚀 Skill generada</span>
+      <div class="preview-actions">
+        <button class="btn btn-secondary" onclick="clearAll()">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-3.16"/></svg>
+          Limpiar
+        </button>
+        <button class="btn btn-primary" onclick="generateSkill()">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+          Generar Skill
+        </button>
+        <button class="btn btn-copy" id="copy-btn" onclick="copyOutput()">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+          Copiar
+        </button>
+      </div>
+    </div>
+
+    <div class="output-box">
+      <div class="output-topbar">
+        <div class="dot dot-r"></div>
+        <div class="dot dot-y"></div>
+        <div class="dot dot-g"></div>
+        <span class="output-filename">skill_claude.txt</span>
+      </div>
+      <div id="output-text">
+        <div class="output-placeholder">
+          <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+          <p>Rellena los campos de arriba y presiona<br><strong>Generar Skill</strong> para ver tu prompt estructurado aquí.</p>
+        </div>
+      </div>
+      <div class="stats-line" id="stats-line" style="display:none">
+        <div class="stat-item">Bloques: <span class="stat-value" id="stat-bloques">0</span></div>
+        <div class="stat-item">Caracteres: <span class="stat-value" id="stat-chars">0</span></div>
+        <div class="stat-item">~Tokens: <span class="stat-value" id="stat-tokens">0</span></div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast">✓ Skill copiada al portapapeles</div>
+
+<script>
+  let generatedText = '';
+  let activeToggles = { criterios: false, ejemplos: false, formato: false };
+
+  function toggleBlock(name) {
+    activeToggles[name] = !activeToggles[name];
+    const btn = document.getElementById('toggle-' + name);
+    if (activeToggles[name]) {
+      btn.classList.add('active');
+      btn.textContent = 'incluido ✓';
+    } else {
+      btn.classList.remove('active');
+      btn.textContent = 'incluir';
+    }
+  }
+
+  // Activar toggles automáticamente si el campo tiene contenido
+  ['criterios','ejemplos','formato'].forEach(name => {
+    document.getElementById('field-' + name).addEventListener('input', function() {
+      if (this.value.trim() && !activeToggles[name]) {
+        toggleBlock(name);
+      }
+    });
+  });
+
+  function addStep() {
+    const ta = document.getElementById('field-instrucciones');
+    const lines = ta.value.split('\n').filter(l => l.trim());
+    const stepNums = lines.map(l => l.match(/^(\d+)\./)).filter(Boolean).map(m => parseInt(m[1]));
+    const next = stepNums.length > 0 ? Math.max(...stepNums) + 1 : 1;
+    ta.value += (ta.value && !ta.value.endsWith('\n') ? '\n' : '') + next + '. ';
+    ta.focus();
+    ta.setSelectionRange(ta.value.length, ta.value.length);
+  }
+
+  function addVerify() {
+    const ta = document.getElementById('field-instrucciones');
+    const verif = '\n\nAntes de terminar, verifica que la respuesta:\n- Use solo información incluida en el documento\n- No invente datos\n- Siga el formato solicitado';
+    ta.value += verif;
+    ta.focus();
+  }
+
+  function addCondition() {
+    const ta = document.getElementById('field-instrucciones');
+    ta.value += (ta.value && !ta.value.endsWith('\n') ? '\n' : '') + '- Si falta información para completar la tarea, indícalo explícitamente en lugar de asumir o inventar datos.';
+    ta.focus();
+  }
+
+  function generateSkill() {
+    const ctx = document.getElementById('field-contexto').value.trim();
+    const dat = document.getElementById('field-datos').value.trim();
+    const ins = document.getElementById('field-instrucciones').value.trim();
+    const crit = document.getElementById('field-criterios').value.trim();
+    const ex = document.getElementById('field-ejemplos').value.trim();
+    const fmt = document.getElementById('field-formato').value.trim();
+
+    if (!ctx && !ins) {
+      shakeOutput();
+      return;
+    }
+
+    let parts = [];
+    let bloques = 0;
+
+    if (ctx) { parts.push(`<contexto>\n${ctx}\n</contexto>`); bloques++; }
+    if (dat) { parts.push(`<datos>\n${dat}\n</datos>`); bloques++; }
+    if (ins) { parts.push(`<instrucciones>\n${ins}\n</instrucciones>`); bloques++; }
+    if (crit && activeToggles.criterios) { parts.push(`<criterios>\n${crit}\n</criterios>`); bloques++; }
+    if (ex && activeToggles.ejemplos) {
+      parts.push(`<examples>\n<example>\n${ex}\n</example>\n</examples>`);
+      bloques++;
+    }
+    if (fmt && activeToggles.formato) { parts.push(`<formato_salida>\n${fmt}\n</formato_salida>`); bloques++; }
+
+    generatedText = parts.join('\n\n');
+
+    // Render con sintaxis coloreada
+    const outputEl = document.getElementById('output-text');
+    outputEl.innerHTML = highlightXML(generatedText);
+
+    // Stats
+    const chars = generatedText.length;
+    const tokens = Math.round(chars / 4);
+    document.getElementById('stat-bloques').textContent = bloques;
+    document.getElementById('stat-chars').textContent = chars.toLocaleString();
+    document.getElementById('stat-tokens').textContent = '~' + tokens.toLocaleString();
+    document.getElementById('stats-line').style.display = 'flex';
+
+    // Scroll al output
+    document.querySelector('.preview-section').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+
+  function highlightXML(text) {
+    return text
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/&lt;(\/?[\w_]+)&gt;/g, (m, tag) => {
+        const isClose = tag.startsWith('/');
+        return `<span class="${isClose ? 'tag-close' : 'tag-open'}">&lt;${tag}&gt;</span>`;
+      });
+  }
+
+  function copyOutput() {
+    if (!generatedText) {
+      generateSkill();
+      if (!generatedText) return;
+    }
+    navigator.clipboard.writeText(generatedText).then(() => {
+      showToast();
+      const btn = document.getElementById('copy-btn');
+      btn.classList.add('copied');
+      btn.innerHTML = `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> Copiado!`;
+      setTimeout(() => {
+        btn.classList.remove('copied');
+        btn.innerHTML = `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg> Copiar`;
+      }, 2500);
+    });
+  }
+
+  function clearAll() {
+    ['contexto','datos','instrucciones','criterios','ejemplos','formato'].forEach(id => {
+      document.getElementById('field-' + id).value = '';
+    });
+    Object.keys(activeToggles).forEach(k => {
+      if (activeToggles[k]) toggleBlock(k);
+    });
+    generatedText = '';
+    document.getElementById('output-text').innerHTML = `
+      <div class="output-placeholder">
+        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+        <p>Rellena los campos de arriba y presiona<br><strong>Generar Skill</strong> para ver tu prompt estructurado aquí.</p>
+      </div>`;
+    document.getElementById('stats-line').style.display = 'none';
+  }
+
+  function shakeOutput() {
+    const box = document.querySelector('.output-box');
+    box.style.animation = 'shake 0.4s ease';
+    setTimeout(() => box.style.animation = '', 400);
+  }
+
+  function showToast() {
+    const t = document.getElementById('toast');
+    t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), 2200);
+  }
+
+  // Auto-grow textareas
+  document.querySelectorAll('textarea').forEach(ta => {
+    ta.addEventListener('input', function() {
+      this.style.height = 'auto';
+      this.style.height = Math.min(this.scrollHeight, 320) + 'px';
+    });
+  });
+
+  // Shake keyframes en JS
+  const style = document.createElement('style');
+  style.textContent = `
+    @keyframes shake {
+      0%,100%{transform:translateX(0)}
+      20%{transform:translateX(-6px)}
+      40%{transform:translateX(6px)}
+      60%{transform:translateX(-4px)}
+      80%{transform:translateX(4px)}
+    }
+  `;
+  document.head.appendChild(style);
+</script>
+
+</body>
+</html>
