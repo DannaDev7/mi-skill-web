@@ -232,6 +232,7 @@
   .preview-actions {
     display: flex;
     gap: 8px;
+    flex-wrap: wrap;
   }
 
   .btn {
@@ -286,6 +287,17 @@
   .btn-copy.copied {
     background: rgba(0,212,170,0.15);
     color: var(--accent3);
+  }
+
+  .btn-download {
+    background: var(--surface2);
+    color: #82b4ff;
+    border: 1px solid rgba(130,180,255,0.3);
+  }
+
+  .btn-download:hover {
+    background: rgba(130,180,255,0.1);
+    box-shadow: 0 4px 12px rgba(130,180,255,0.15);
   }
 
   /* Output box */
@@ -455,9 +467,17 @@
 
   /* Responsive */
   @media (max-width: 600px) {
+    .container { padding: 28px 16px 60px; }
     .preview-header { flex-direction: column; align-items: flex-start; }
     .preview-actions { width: 100%; }
-    .btn { flex: 1; justify-content: center; }
+    .btn { flex: 1 1 calc(50% - 4px); justify-content: center; }
+    .block-header { flex-wrap: wrap; row-gap: 6px; }
+    .block-tag { margin-left: 0; }
+    .stats-line { flex-wrap: wrap; gap: 10px 20px; }
+  }
+
+  @media (max-width: 400px) {
+    .btn { flex: 1 1 100%; }
   }
 </style>
 </head>
@@ -569,6 +589,14 @@
         <button class="btn btn-copy" id="copy-btn" onclick="copyOutput()">
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
           Copiar
+        </button>
+        <button class="btn btn-download" onclick="downloadSkill('txt')">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          .TXT
+        </button>
+        <button class="btn btn-download" onclick="downloadSkill('xml')">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          .XML
         </button>
       </div>
     </div>
@@ -719,6 +747,37 @@
     });
   }
 
+  function downloadSkill(type) {
+    if (!generatedText) {
+      generateSkill();
+      if (!generatedText) return;
+    }
+
+    let content, filename, mime;
+
+    if (type === 'xml') {
+      content = `<?xml version="1.0" encoding="UTF-8"?>\n<skill>\n${generatedText}\n</skill>`;
+      filename = 'skill_claude.xml';
+      mime = 'application/xml';
+    } else {
+      content = generatedText;
+      filename = 'skill_claude.txt';
+      mime = 'text/plain';
+    }
+
+    const blob = new Blob([content], { type: mime + ';charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+
+    showToast('✓ Descargado ' + filename);
+  }
+
   function clearAll() {
     ['contexto','datos','instrucciones','criterios','ejemplos','formato'].forEach(id => {
       document.getElementById('field-' + id).value = '';
@@ -741,8 +800,9 @@
     setTimeout(() => box.style.animation = '', 400);
   }
 
-  function showToast() {
+  function showToast(msg) {
     const t = document.getElementById('toast');
+    t.textContent = msg || '✓ Skill copiada al portapapeles';
     t.classList.add('show');
     setTimeout(() => t.classList.remove('show'), 2200);
   }
