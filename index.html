@@ -232,7 +232,6 @@
   .preview-actions {
     display: flex;
     gap: 8px;
-    flex-wrap: wrap;
   }
 
   .btn {
@@ -287,17 +286,6 @@
   .btn-copy.copied {
     background: rgba(0,212,170,0.15);
     color: var(--accent3);
-  }
-
-  .btn-download {
-    background: var(--surface2);
-    color: #82b4ff;
-    border: 1px solid rgba(130,180,255,0.3);
-  }
-
-  .btn-download:hover {
-    background: rgba(130,180,255,0.1);
-    box-shadow: 0 4px 12px rgba(130,180,255,0.15);
   }
 
   /* Output box */
@@ -465,19 +453,107 @@
     50% { opacity: 0.5; }
   }
 
-  /* Responsive */
-  @media (max-width: 600px) {
-    .container { padding: 28px 16px 60px; }
-    .preview-header { flex-direction: column; align-items: flex-start; }
-    .preview-actions { width: 100%; }
-    .btn { flex: 1 1 calc(50% - 4px); justify-content: center; }
-    .block-header { flex-wrap: wrap; row-gap: 6px; }
-    .block-tag { margin-left: 0; }
-    .stats-line { flex-wrap: wrap; gap: 10px 20px; }
+  /* Presets de contexto */
+  .presets {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+    gap: 10px;
   }
 
-  @media (max-width: 400px) {
-    .btn { flex: 1 1 100%; }
+  .preset-btn {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 12px 14px;
+    color: var(--text);
+    font-family: 'DM Mono', monospace;
+    font-size: 12px;
+    cursor: pointer;
+    text-align: left;
+    transition: border-color 0.2s, background 0.2s, transform 0.2s;
+  }
+
+  .preset-btn:hover { border-color: var(--accent); transform: translateY(-2px); }
+  .preset-btn.active { border-color: var(--accent); background: rgba(108,99,255,0.12); box-shadow: 0 0 0 3px var(--glow); }
+
+  .preset-num {
+    font-family: 'Syne', sans-serif;
+    font-weight: 800;
+    font-size: 13px;
+    color: var(--accent);
+  }
+
+  .preset-btn[data-tooltip]::after {
+    content: attr(data-tooltip);
+    position: absolute;
+    bottom: calc(100% + 8px);
+    left: 50%;
+    transform: translateX(-50%) translateY(4px);
+    background: var(--surface2);
+    color: var(--text);
+    border: 1px solid var(--accent);
+    padding: 6px 10px;
+    border-radius: 8px;
+    font-size: 11px;
+    white-space: nowrap;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s, transform 0.2s;
+    z-index: 10;
+  }
+
+  .preset-btn[data-tooltip]:hover::after,
+  .preset-btn[data-tooltip]:focus-visible::after {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+
+  .code .block-icon { background: rgba(255,150,80,0.12); color: #ff9650; }
+
+  .code-lang {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    color: var(--text-muted);
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    padding: 3px 8px;
+    outline: none;
+  }
+
+  #field-codigo { font-size: 12px; tab-size: 2; }
+
+  /* Formato de descarga */
+  .format-switch {
+    display: flex;
+    margin-left: auto;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    overflow: hidden;
+  }
+
+  .format-switch button {
+    background: none;
+    border: none;
+    color: var(--text-muted);
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    padding: 4px 12px;
+    cursor: pointer;
+  }
+
+  .format-switch button.active { background: rgba(108,99,255,0.18); color: var(--accent); }
+
+  /* Responsive */
+  @media (max-width: 600px) {
+    .preview-actions { flex-wrap: wrap; }
+    .preview-header { flex-direction: column; align-items: flex-start; }
+    .preview-actions { width: 100%; }
+    .btn { flex: 1; justify-content: center; }
   }
 </style>
 </head>
@@ -494,6 +570,23 @@
 
   <!-- Builder -->
   <div class="builder-grid">
+
+    <!-- PRESETS DE CONTEXTO -->
+    <div class="section-divider">elige un prompt base (opcional)</div>
+    <div class="presets">
+      <button class="preset-btn" data-preset="detective" data-tooltip="Encontrar bugs en segundos" onclick="applyPreset('detective')">
+        <span class="preset-num">01</span> el-detective.prompt
+      </button>
+      <button class="preset-btn" data-preset="traductor" data-tooltip="Entender código ajeno" onclick="applyPreset('traductor')">
+        <span class="preset-num">02</span> el-traductor.prompt
+      </button>
+      <button class="preset-btn" data-preset="optimizador" data-tooltip="Por qué algo está lento" onclick="applyPreset('optimizador')">
+        <span class="preset-num">03</span> el-optimizador.prompt
+      </button>
+      <button class="preset-btn" data-preset="documentador" data-tooltip="README o comentarios" onclick="applyPreset('documentador')">
+        <span class="preset-num">04</span> el-documentador.prompt
+      </button>
+    </div>
 
     <!-- CONTEXTO -->
     <div class="block ctx">
@@ -513,6 +606,32 @@
         <span class="block-tag">&lt;datos&gt;</span>
       </div>
       <textarea id="field-datos" placeholder="Incluye aquí la información, documentos o variables que Claude debe analizar.&#10;&#10;Ej: {{documento_del_usuario}}, {{transcripcion}}, {{ticket}}..." rows="3"></textarea>
+    </div>
+
+    <!-- CÓDIGO (opcional, para Claude Desktop) -->
+    <div class="block code">
+      <div class="block-header">
+        <div class="block-icon">💻</div>
+        <span class="block-title">Código</span>
+        <span class="block-tag">&lt;codigo&gt;</span>
+        <select class="code-lang" id="code-lang" title="Lenguaje del código">
+          <option value="">lenguaje…</option>
+          <option>javascript</option>
+          <option>typescript</option>
+          <option>python</option>
+          <option>csharp</option>
+          <option>java</option>
+          <option>sql</option>
+          <option>html</option>
+          <option>css</option>
+          <option>powershell</option>
+          <option>bash</option>
+        </select>
+        <button class="block-toggle" id="toggle-codigo" onclick="toggleBlock('codigo')">incluir</button>
+      </div>
+      <div id="body-codigo">
+        <textarea id="field-codigo" spellcheck="false" placeholder="Opcional — pega aquí el código que Claude debe revisar (útil en Claude Desktop para Windows)." rows="4"></textarea>
+      </div>
     </div>
 
     <!-- INSTRUCCIONES (campo especial) -->
@@ -590,13 +709,9 @@
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
           Copiar
         </button>
-        <button class="btn btn-download" onclick="downloadSkill('txt')">
+        <button class="btn btn-secondary" onclick="downloadOutput()">
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-          .TXT
-        </button>
-        <button class="btn btn-download" onclick="downloadSkill('xml')">
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-          .XML
+          Descargar
         </button>
       </div>
     </div>
@@ -606,7 +721,11 @@
         <div class="dot dot-r"></div>
         <div class="dot dot-y"></div>
         <div class="dot dot-g"></div>
-        <span class="output-filename">skill_claude.txt</span>
+        <span class="output-filename" id="output-filename">skill_claude.txt</span>
+        <div class="format-switch" title="Formato de descarga">
+          <button class="active" data-format="txt" onclick="setFormat('txt')">.txt</button>
+          <button data-format="md" onclick="setFormat('md')">.md</button>
+        </div>
       </div>
       <div id="output-text">
         <div class="output-placeholder">
@@ -629,7 +748,44 @@
 
 <script>
   let generatedText = '';
-  let activeToggles = { criterios: false, ejemplos: false, formato: false };
+  let activeToggles = { codigo: false, criterios: false, ejemplos: false, formato: false };
+  let outputFormat = 'txt';
+
+  const PRESETS = {
+    detective: 'Actúa como revisor de código senior. Analiza este código y dime: 1) qué está fallando,\n2) en qué línea exacta, 3) por qué está pasando. Sé directo, sin teoría de más.',
+    traductor: 'Explícame qué hace este código, paso a paso, como si se lo estuvieras explicando a\nalguien que nunca lo ha visto. Dime también si detectas algo riesgoso o mal hecho.',
+    optimizador: 'Esta función o consulta está lenta. Dime por qué y dame 2-3 formas de optimizarla,\nexplicando el trade-off de cada una. No cambies la lógica sin decírmelo.',
+    documentador: 'Genera comentarios claros para este código y un README corto que explique qué hace,\ncómo se usa y qué dependencias necesita.'
+  };
+
+  function applyPreset(name) {
+    const ta = document.getElementById('field-contexto');
+    ta.value = PRESETS[name];
+    ta.dispatchEvent(new Event('input'));
+    setActivePreset(name);
+    ta.focus();
+  }
+
+  function setActivePreset(name) {
+    document.querySelectorAll('.preset-btn').forEach(b => {
+      b.classList.toggle('active', b.dataset.preset === name);
+    });
+  }
+
+  // Si el usuario edita el contexto y ya no coincide con el preset, se desmarca
+  document.getElementById('field-contexto').addEventListener('input', function() {
+    const match = Object.keys(PRESETS).find(k => PRESETS[k] === this.value);
+    setActivePreset(match || null);
+  });
+
+  function setFormat(fmt) {
+    outputFormat = fmt;
+    document.querySelectorAll('.format-switch button').forEach(b => {
+      b.classList.toggle('active', b.dataset.format === fmt);
+    });
+    document.getElementById('output-filename').textContent = 'skill_claude.' + fmt;
+    if (generatedText) generateSkill(false);
+  }
 
   function toggleBlock(name) {
     activeToggles[name] = !activeToggles[name];
@@ -644,7 +800,7 @@
   }
 
   // Activar toggles automáticamente si el campo tiene contenido
-  ['criterios','ejemplos','formato'].forEach(name => {
+  ['codigo','criterios','ejemplos','formato'].forEach(name => {
     document.getElementById('field-' + name).addEventListener('input', function() {
       if (this.value.trim() && !activeToggles[name]) {
         toggleBlock(name);
@@ -675,9 +831,11 @@
     ta.focus();
   }
 
-  function generateSkill() {
+  function generateSkill(scroll = true) {
     const ctx = document.getElementById('field-contexto').value.trim();
     const dat = document.getElementById('field-datos').value.trim();
+    const code = document.getElementById('field-codigo').value.replace(/\s+$/, '');
+    const lang = document.getElementById('code-lang').value;
     const ins = document.getElementById('field-instrucciones').value.trim();
     const crit = document.getElementById('field-criterios').value.trim();
     const ex = document.getElementById('field-ejemplos').value.trim();
@@ -688,24 +846,31 @@
       return;
     }
 
+    const md = outputFormat === 'md';
+    const fence = '```';
     let parts = [];
     let bloques = 0;
 
-    if (ctx) { parts.push(`<contexto>\n${ctx}\n</contexto>`); bloques++; }
-    if (dat) { parts.push(`<datos>\n${dat}\n</datos>`); bloques++; }
-    if (ins) { parts.push(`<instrucciones>\n${ins}\n</instrucciones>`); bloques++; }
-    if (crit && activeToggles.criterios) { parts.push(`<criterios>\n${crit}\n</criterios>`); bloques++; }
-    if (ex && activeToggles.ejemplos) {
-      parts.push(`<examples>\n<example>\n${ex}\n</example>\n</examples>`);
+    function add(tag, title, body) {
+      parts.push(md ? `## ${title}\n\n${body}` : `<${tag}>\n${body}\n</${tag}>`);
       bloques++;
     }
-    if (fmt && activeToggles.formato) { parts.push(`<formato_salida>\n${fmt}\n</formato_salida>`); bloques++; }
 
-    generatedText = parts.join('\n\n');
+    if (ctx) add('contexto', 'Contexto', ctx);
+    if (dat) add('datos', 'Datos', dat);
+    if (code.trim() && activeToggles.codigo) add('codigo', 'Código', `${fence}${lang}\n${code}\n${fence}`);
+    if (ins) add('instrucciones', 'Instrucciones', ins);
+    if (crit && activeToggles.criterios) add('criterios', 'Criterios de calidad', crit);
+    if (ex && activeToggles.ejemplos) {
+      add('examples', 'Ejemplos', md ? ex : `<example>\n${ex}\n</example>`);
+    }
+    if (fmt && activeToggles.formato) add('formato_salida', 'Formato de salida', fmt);
+
+    generatedText = (md ? '# Skill Claude\n\n' : '') + parts.join('\n\n');
 
     // Render con sintaxis coloreada
     const outputEl = document.getElementById('output-text');
-    outputEl.innerHTML = highlightXML(generatedText);
+    outputEl.innerHTML = md ? escapeHTML(generatedText) : highlightXML(generatedText);
 
     // Stats
     const chars = generatedText.length;
@@ -716,14 +881,18 @@
     document.getElementById('stats-line').style.display = 'flex';
 
     // Scroll al output
-    document.querySelector('.preview-section').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    if (scroll) document.querySelector('.preview-section').scrollIntoView({ behavior: 'smooth', block: 'start' });
   }
 
-  function highlightXML(text) {
+  function escapeHTML(text) {
     return text
       .replace(/&/g, '&amp;')
       .replace(/</g, '&lt;')
-      .replace(/>/g, '&gt;')
+      .replace(/>/g, '&gt;');
+  }
+
+  function highlightXML(text) {
+    return escapeHTML(text)
       .replace(/&lt;(\/?[\w_]+)&gt;/g, (m, tag) => {
         const isClose = tag.startsWith('/');
         return `<span class="${isClose ? 'tag-close' : 'tag-open'}">&lt;${tag}&gt;</span>`;
@@ -747,41 +916,26 @@
     });
   }
 
-  function downloadSkill(type) {
-    if (!generatedText) {
-      generateSkill();
-      if (!generatedText) return;
-    }
-
-    let content, filename, mime;
-
-    if (type === 'xml') {
-      content = `<?xml version="1.0" encoding="UTF-8"?>\n<skill>\n${generatedText}\n</skill>`;
-      filename = 'skill_claude.xml';
-      mime = 'application/xml';
-    } else {
-      content = generatedText;
-      filename = 'skill_claude.txt';
-      mime = 'text/plain';
-    }
-
-    const blob = new Blob([content], { type: mime + ';charset=utf-8' });
-    const url = URL.createObjectURL(blob);
+  function downloadOutput() {
+    generateSkill(false);
+    if (!generatedText) return;
+    const type = outputFormat === 'md' ? 'text/markdown' : 'text/plain';
+    const blob = new Blob([generatedText], { type: type + ';charset=utf-8' });
     const a = document.createElement('a');
-    a.href = url;
-    a.download = filename;
+    a.href = URL.createObjectURL(blob);
+    a.download = 'skill_claude.' + outputFormat;
     document.body.appendChild(a);
     a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-
-    showToast('✓ Descargado ' + filename);
+    a.remove();
+    setTimeout(() => URL.revokeObjectURL(a.href), 1000);
   }
 
   function clearAll() {
-    ['contexto','datos','instrucciones','criterios','ejemplos','formato'].forEach(id => {
+    ['contexto','datos','codigo','instrucciones','criterios','ejemplos','formato'].forEach(id => {
       document.getElementById('field-' + id).value = '';
     });
+    document.getElementById('code-lang').value = '';
+    setActivePreset(null);
     Object.keys(activeToggles).forEach(k => {
       if (activeToggles[k]) toggleBlock(k);
     });
@@ -800,9 +954,8 @@
     setTimeout(() => box.style.animation = '', 400);
   }
 
-  function showToast(msg) {
+  function showToast() {
     const t = document.getElementById('toast');
-    t.textContent = msg || '✓ Skill copiada al portapapeles';
     t.classList.add('show');
     setTimeout(() => t.classList.remove('show'), 2200);
   }
